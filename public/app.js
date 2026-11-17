@@ -374,6 +374,12 @@ function updateHud() {
   var fin = g.status === 'finished' && !A.anim;
   $('end').hidden = !fin;
   if (fin) buildEnd();
+  var other = g.rematch && A.seat >= 0;
+  $('rematch').hidden = A.seat < 0;
+  $('rematch').textContent = other ? 'Revanche annehmen' : 'Revanche';
+  if (other && !A.rmToast) { A.rmToast = true; toast('Revanche wartet!'); }
+  $('mTg').hidden = !(TGC && TGC.telegram && TGC.bot && A.seat >= 0 && g.tg && !g.tg[A.seat]);
+  $('mLink').hidden = A.seat < 0;
 }
 function buildEnd() {
   var g = A.game, t0 = totalFor(0), t1 = totalFor(1), h;
@@ -443,7 +449,7 @@ function openGame(id) {
   });
 }
 function route() {
-  stopPoll();
+  stopPoll(); $('menu').hidden = true;
   var pv = /[?&]preview=(\d+)/.exec(location.search);
   if (pv) {
     var n = Math.max(1, Math.min(LEVELS.length, parseInt(pv[1], 10))) - 1, tb = [0, 1].map(function (i) { return { x: LEVELS[n].tee[i][0], y: LEVELS[n].tee[i][1], strokes: 0, done: false }; });
@@ -451,8 +457,9 @@ function route() {
     commit({ game: { id: 'preview', status: 'playing', players: [{ name: 'Alex' }, { name: 'Viktor' }], hole: n, turn: 0, balls: tb, scores: [[], []], seq: 5, levels: LEVELS.length, updatedAt: 0 }, you: 0 });
     return;
   }
-  var m = /^#\/game\/([0-9a-f-]{36})/i.exec(location.hash);
+  var m = /^#\/game\/([0-9a-f-]{36})(?:\/k\/([0-9a-f]{32}))?/i.exec(location.hash);
   if (!m) { showHome(); return; }
+  if (m[2]) { rememberGame(m[1], m[2], -1, myName()); history.replaceState(null, '', location.pathname + location.search + '#/game/' + m[1]); }
   openGame(m[1]);
 }
 $('create').addEventListener('click', function () {
@@ -477,6 +484,19 @@ $('share').addEventListener('click', function () {
   else { $('link').select(); toast('Link markieren und kopieren'); }
 });
 $('again').addEventListener('click', function () { location.hash = ''; });
+$('rematch').addEventListener('click', function () {
+  api('POST', '/api/games/' + A.id + '/rematch', { token: A.token }).then(function (r) {
+    rememberGame(r.id, r.token, r.seat, myName()); A.rmToast = false; location.hash = '#/game/' + r.id;
+  }).catch(function (e) { toast(e.message || 'Fehler'); });
+});
+$('menuBtn').addEventListener('click', function () { updateHud(); $('menu').hidden = false; });
+$('mClose').addEventListener('click', function () { $('menu').hidden = true; });
+$('mHome').addEventListener('click', function () { $('menu').hidden = true; location.hash = ''; });
+$('mTg').addEventListener('click', function () { $('tgb').click(); });
+$('mLink').addEventListener('click', function () {
+  var url = location.origin + location.pathname + '#/game/' + A.id + '/k/' + A.token;
+  try { navigator.clipboard.writeText(url).then(function () { toast('Dein Link ist kopiert'); }, function () { prompt('Dein Link:', url); }); } catch (e) { prompt('Dein Link:', url); }
+});
 window.addEventListener('hashchange', route);
 window.addEventListener('resize', function () { if (!$('game').hidden) fit(); });
 if (window.ResizeObserver) new ResizeObserver(function () { if (!$('game').hidden) fit(); }).observe($('game'));

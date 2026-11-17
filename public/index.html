@@ -41,6 +41,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .meter i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#6fd36a,#f2c94c 60%,#ef7b45);box-shadow:inset 0 calc(var(--u) * 2) 0 rgba(255,255,255,.3)}
 .go{position:absolute;left:calc(var(--u) * 640);top:calc(var(--u) * 352);width:calc(var(--u) * 186);height:calc(var(--u) * 34);border:0;border-radius:calc(var(--u) * 17);background:linear-gradient(#ffdc6a,#f2c94c 60%,#e0b030);color:#1a2e1f;font:800 calc(var(--u) * 17) Nunito,system-ui,sans-serif;box-shadow:0 calc(var(--u) * 3) calc(var(--u) * 10) rgba(0,0,0,.45),inset 0 calc(var(--u) * 1.5) 0 rgba(255,255,255,.55);cursor:pointer}
 .tgb{position:absolute;left:calc(var(--u) * 528);top:calc(var(--u) * 356);width:calc(var(--u) * 102);height:calc(var(--u) * 26);border:1px solid var(--line);border-radius:calc(var(--u) * 13);background:#24402f;color:var(--ink);font:800 calc(var(--u) * 13) Nunito,system-ui,sans-serif;cursor:pointer}
+.menu{position:absolute;left:calc(var(--u) * 560);top:calc(var(--u) * 12);width:calc(var(--u) * 40);height:calc(var(--u) * 40);border-radius:50%;border:calc(var(--u) * 1.5) solid rgba(255,255,255,.14);background:var(--glass);color:var(--ink);font:800 calc(var(--u) * 20) Nunito,system-ui,sans-serif;cursor:pointer;line-height:1}
+.overlay .col{display:flex;flex-direction:column;gap:calc(var(--u) * 8)}
+.overlay .hint{color:var(--soft);font-size:calc(var(--u) * 13)}
 .go.off{filter:saturate(.3) brightness(.8)}
 .go:focus-visible{outline:calc(var(--u) * 3) solid #fff;outline-offset:calc(var(--u) * 2)}
 .banner{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--u) * 76);max-width:calc(var(--u) * 560);padding:calc(var(--u) * 10) calc(var(--u) * 18);border-radius:calc(var(--u) * 16);background:var(--glass);-webkit-backdrop-filter:blur(calc(var(--u) * 6));backdrop-filter:blur(calc(var(--u) * 6));border:calc(var(--u) * 1.5) solid var(--line);font-size:calc(var(--u) * 15);font-weight:700;text-align:center;pointer-events:none}
@@ -85,6 +88,17 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   <div class="bar"><span>Kraft</span><span class="meter"><i id="pw"></i></span><span id="pwT">0 %</span><span id="angT" style="margin-left:calc(var(--u) * 14)">Winkel -</span></div>
   <button class="go off" id="go" type="button">Schlag</button>
   <button class="tgb" id="tgb" type="button" hidden>Telegram</button>
+  <button class="menu" id="menuBtn" type="button" aria-label="Menü">≡</button>
+  <div class="overlay" id="menu" hidden><div class="card">
+    <h2>Menü</h2>
+    <div class="col">
+      <button class="btn" id="mTg" type="button">Telegram verbinden</button>
+      <button class="btn alt" id="mLink" type="button">Meinen Link kopieren</button>
+      <div class="hint">Mit deinem Link spielst du auf jedem Gerät weiter, z. B. nach Handywechsel. Nicht weitergeben, wer ihn hat, spielt für dich.</div>
+      <button class="btn alt" id="mHome" type="button">Zur Startseite</button>
+      <button class="btn alt" id="mClose" type="button">Schließen</button>
+    </div>
+  </div></div>
   <div class="overlay" id="invite" hidden><div class="card">
     <h2>Mitspieler einladen</h2>
     <div>Schick diesen Link an deinen Mitspieler. Sobald er beitritt, geht es los.</div>
@@ -94,7 +108,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   <div class="overlay" id="end" hidden><div class="card">
     <h2 id="endT">Spiel beendet</h2>
     <table id="endTab"></table>
-    <div class="row"><button class="btn" id="again" type="button">Neues Spiel</button></div>
+    <div class="row"><button class="btn" id="rematch" type="button">Revanche</button><button class="btn alt" id="again" type="button">Neues Spiel</button></div>
   </div></div>
 </div>
 <div class="rot" id="rot">Handy quer halten für das beste Bild</div>

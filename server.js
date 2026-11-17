@@ -39,10 +39,10 @@ async function tg(method, body) {
   const r = await fetch('https://api.telegram.org/bot' + TG_TOKEN + '/' + method, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
   return r.json();
 }
-function notify(g, seat, text) {
+function notify(g, seat, text, gid) {
   const p = g.players[seat];
   if (!TG_TOKEN || !p || !p.chat) return;
-  tg('sendMessage', { chat_id: p.chat, text: text + (baseUrl ? '\n' + baseUrl + '/#/game/' + g.id : '') }).catch(e => console.error('telegram', e.message));
+  tg('sendMessage', { chat_id: p.chat, text: text + (baseUrl ? '\n' + baseUrl + '/#/game/' + (gid || g.id) : '') }).catch(e => console.error('telegram', e.message));
 }
 async function tgLoop() {
   let offset = 0;
@@ -93,7 +93,7 @@ function pub(g) {
   return {
     id: g.id, status: g.status, players: g.players.map(p => ({ name: p.name })),
     hole: g.hole, turn: g.turn, balls: g.balls, scores: g.scores, seq: g.seq,
-    levels: MG.LEVELS.length, updatedAt: g.updatedAt, tg: [0, 1].map(i => !!(g.players[i] && g.players[i].chat))
+    levels: MG.LEVELS.length, updatedAt: g.updatedAt, rematch: g.rematch || null, tg: [0, 1].map(i => !!(g.players[i] && g.players[i].chat))
   };
 }
 function seatOf(g, tok) {
@@ -195,6 +195,26 @@ async function handleApi(req, res, url) {
     }
     applyShot(g, seat, angle, Math.max(3, Math.min(100, power)), { mill: Number(body.mill), gates: Array.isArray(body.gates) ? body.gates.map(Number) : null });
     return sendJson(res, 200, view(g, seat, g.seq - 1));
+  }
+  if (action === 'rematch' && req.method === 'POST') {
+    const body = await readBody(req);
+    const seat = seatOf(g, body.token);
+    if (seat < 0) return sendJson(res, 403, { error: 'Kein Zugriff' });
+    if (g.status !== 'finished') return sendJson(res, 409, { error: 'Das Spiel läuft noch' });
+    let ng = g.rematch && games[g.rematch];
+    if (!ng) {
+      const id = crypto.randomUUID();
+      ng = {
+        id, status: 'playing',
+        players: g.players.map(p => ({ name: p.name, token: token(), chat: p.chat })),
+        hole: 0, turn: 0, balls: teeBalls(MG.LEVELS[0]),
+        scores: [[], []], seq: 0, lastShot: null,
+        createdAt: Date.now(), updatedAt: Date.now()
+      };
+      games[id] = ng; g.rematch = id; g.updatedAt = Date.now(); save();
+      notify(ng, 1 - seat, 'Minigolf: ' + g.players[seat].name + ' will Revanche!' + (ng.turn === 1 - seat ? ' Du bist dran.' : ''), g.id);
+    }
+    return sendJson(res, 200, { id: ng.id, token: ng.players[seat].token, seat });
   }
   return sendJson(res, 404, { error: 'not found' });
 }
