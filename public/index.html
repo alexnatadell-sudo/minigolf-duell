@@ -42,6 +42,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .go{position:absolute;left:calc(var(--u) * 640);top:calc(var(--u) * 352);width:calc(var(--u) * 186);height:calc(var(--u) * 34);border:0;border-radius:calc(var(--u) * 17);background:linear-gradient(#ffdc6a,#f2c94c 60%,#e0b030);color:#1a2e1f;font:800 calc(var(--u) * 17) Nunito,system-ui,sans-serif;box-shadow:0 calc(var(--u) * 3) calc(var(--u) * 10) rgba(0,0,0,.45),inset 0 calc(var(--u) * 1.5) 0 rgba(255,255,255,.55);cursor:pointer}
 .tgb{position:absolute;left:calc(var(--u) * 528);top:calc(var(--u) * 356);width:calc(var(--u) * 102);height:calc(var(--u) * 26);border:1px solid var(--line);border-radius:calc(var(--u) * 13);background:#24402f;color:var(--ink);font:800 calc(var(--u) * 13) Nunito,system-ui,sans-serif;cursor:pointer}
 .menu{position:absolute;left:calc(var(--u) * 560);top:calc(var(--u) * 12);width:calc(var(--u) * 40);height:calc(var(--u) * 40);border-radius:50%;border:calc(var(--u) * 1.5) solid rgba(255,255,255,.14);background:var(--glass);color:var(--ink);font:800 calc(var(--u) * 20) Nunito,system-ui,sans-serif;cursor:pointer;line-height:1}
+.snd{left:calc(var(--u) * 268)}
 .overlay .col{display:flex;flex-direction:column;gap:calc(var(--u) * 8)}
 .overlay .hint{color:var(--soft);font-size:calc(var(--u) * 13)}
 .go.off{filter:saturate(.3) brightness(.8)}
@@ -88,11 +89,13 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   <div class="bar"><span>Kraft</span><span class="meter"><i id="pw"></i></span><span id="pwT">0 %</span><span id="angT" style="margin-left:calc(var(--u) * 14)">Winkel -</span></div>
   <button class="go off" id="go" type="button">Schlag</button>
   <button class="tgb" id="tgb" type="button" hidden>Telegram</button>
+  <button class="menu snd" id="sndBtn" type="button" aria-label="Ton an oder aus">🔊</button>
   <button class="menu" id="menuBtn" type="button" aria-label="Menü">≡</button>
   <div class="overlay" id="menu" hidden><div class="card">
     <h2>Menü</h2>
     <div class="col">
       <button class="btn" id="mTg" type="button">Telegram verbinden</button>
+      <button class="btn alt" id="mSnd" type="button">Ton: an</button>
       <button class="btn alt" id="mLink" type="button">Meinen Link kopieren</button>
       <div class="hint">Mit deinem Link spielst du auf jedem Gerät weiter, z. B. nach Handywechsel. Nicht weitergeben, wer ihn hat, spielt für dich.</div>
       <button class="btn alt" id="mHome" type="button">Zur Startseite</button>

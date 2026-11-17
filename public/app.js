@@ -258,11 +258,43 @@ function render(ms) {
   if (canAim()) drawAim(ctx, t, P);
 }
 
+var SND = { ctx: null, mute: false };
+try { SND.mute = localStorage.getItem('mg_mute') === '1'; } catch (e) {}
+function audio() {
+  if (!SND.ctx) { try { SND.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (SND.ctx.state === 'suspended') SND.ctx.resume();
+  return SND.ctx;
+}
+function tone(f0, f1, dur, type, vol, delay) {
+  var c = SND.mute ? null : audio(); if (!c) return;
+  var t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, vol, freq, delay) {
+  var c = SND.mute ? null : audio(); if (!c) return;
+  var n = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  var src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t = c.currentTime + (delay || 0);
+  src.buffer = buf; f.type = 'bandpass'; f.frequency.value = freq; g.gain.value = vol;
+  src.connect(f); f.connect(g); g.connect(c.destination); src.start(t);
+}
+function sound(name) {
+  if (SND.mute) return;
+  if (name === 'hit') { tone(900, 300, 0.07, 'triangle', 0.35); noise(0.05, 0.25, 2500); }
+  else if (name === 'bump') { tone(520, 260, 0.09, 'square', 0.18); }
+  else if (name === 'splash') { noise(0.5, 0.5, 700); tone(300, 90, 0.35, 'sine', 0.25); }
+  else if (name === 'sink') { tone(180, 90, 0.18, 'sine', 0.4); tone(523, 523, 0.14, 'triangle', 0.25, 0.18); tone(659, 659, 0.14, 'triangle', 0.25, 0.3); tone(784, 784, 0.3, 'triangle', 0.25, 0.42); }
+  else if (name === 'tele') { tone(300, 1200, 0.25, 'sine', 0.25); tone(1200, 400, 0.25, 'sine', 0.2, 0.2); }
+  else if (name === 'turn') { tone(660, 660, 0.12, 'sine', 0.3); tone(880, 880, 0.2, 'sine', 0.3, 0.13); }
+  else if (name === 'win') { [523, 659, 784, 1047].forEach(function (f, i) { tone(f, f, 0.25, 'triangle', 0.28, i * 0.14); }); }
+}
 function onEvent(ev) {
-  if (ev.t === 'bump') toast('Rempel!');
-  else if (ev.t === 'splash') toast('Platsch! +1 Strafschlag');
-  else if (ev.t === 'sink') toast('Eingelocht!');
-  else if (ev.t === 'tele') toast('Teleport!');
+  if (ev.t === 'bump') { toast('Rempel!'); sound('bump'); }
+  else if (ev.t === 'splash') { toast('Platsch! +1 Strafschlag'); sound('splash'); }
+  else if (ev.t === 'sink') { toast('Eingelocht!'); sound('sink'); }
+  else if (ev.t === 'tele') { toast('Teleport!'); sound('tele'); }
 }
 var toastTimer = 0;
 function toast(msg) {
@@ -302,7 +334,7 @@ function handleUpdate(res) {
   else commit(res);
 }
 function playShot(shot, res) {
-  A.busy = true; A.aim = null;
+  A.busy = true; A.aim = null; sound('hit');
   A.viewLevel = shot.hole;
   A.anim = { frames: shot.frames, events: shot.events, idx: 0, ev: 0, start: performance.now(), res: res, shot: shot, prevDone: [A.game.balls[0].done, A.game.balls[1].done] };
   if (reduce) { A.anim.start -= 100000; }
@@ -316,6 +348,7 @@ function finishAnim() {
   A.anim = null; A.busy = false;
   var pen = an.shot.penalties;
   commit(an.res);
+  if (an.res.game.status === 'finished') sound('win'); else if (A.seat >= 0 && an.res.game.turn === A.seat) sound('turn');
   if (an.res.game.hole !== an.shot.hole || (an.res.game.status === 'finished' && an.shot.hole === LEVELS.length - 1)) {
     if (an.res.game.status !== 'finished') toast('Bahn geschafft!');
   }
@@ -380,6 +413,8 @@ function updateHud() {
   if (other && !A.rmToast) { A.rmToast = true; toast('Revanche wartet!'); }
   $('mTg').hidden = !(TGC && TGC.telegram && TGC.bot && A.seat >= 0 && g.tg && !g.tg[A.seat]);
   $('mLink').hidden = A.seat < 0;
+  $('mSnd').textContent = SND.mute ? 'Ton: aus' : 'Ton: an';
+  $('sndBtn').textContent = SND.mute ? '🔇' : '🔊';
 }
 function buildEnd() {
   var g = A.game, t0 = totalFor(0), t1 = totalFor(1), h;
@@ -483,6 +518,10 @@ $('share').addEventListener('click', function () {
   if (navigator.share) navigator.share({ title: 'Minigolf Duell', text: 'Spielst du mit mir Minigolf?', url: url }).catch(function () {});
   else { $('link').select(); toast('Link markieren und kopieren'); }
 });
+document.addEventListener('pointerdown', function () { audio(); }, { once: true });
+function toggleSnd() { SND.mute = !SND.mute; try { localStorage.setItem('mg_mute', SND.mute ? '1' : '0'); } catch (e) {} updateHud(); if (!SND.mute) sound('turn'); }
+$('mSnd').addEventListener('click', toggleSnd);
+$('sndBtn').addEventListener('click', toggleSnd);
 $('again').addEventListener('click', function () { location.hash = ''; });
 $('rematch').addEventListener('click', function () {
   api('POST', '/api/games/' + A.id + '/rematch', { token: A.token }).then(function (r) {
