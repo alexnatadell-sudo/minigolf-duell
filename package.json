@@ -1,0 +1,10 @@
+{
+  "name": "minigolf-duell",
+  "version": "1.0.0",
+  "description": "Minigolf-Duell für zwei Spieler, rundenbasiert übers Internet",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED",
+  "private": true
+}

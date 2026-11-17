@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minigolf Duell</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap">
+<style>
+:root{--bg:#0e1913;--ink:#f4f8f2;--soft:#cfe6d4;--gold:#f2c94c;--glass:rgba(8,22,14,.7);--card:#16281d;--line:rgba(255,255,255,.14);color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;height:100dvh;background:var(--bg)}
+body{display:flex;align-items:center;justify-content:center;font-family:Nunito,system-ui,sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent}
+.screen{width:min(92vw,460px);padding:24px;background:var(--card);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;gap:14px}
+.screen h1{margin:0;font-size:28px;font-weight:800}
+.screen p{margin:0;color:var(--soft);line-height:1.45}
+.screen input{font:700 17px Nunito,system-ui,sans-serif;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0e1913;color:var(--ink);width:100%}
+.screen input:focus-visible,.btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{font:800 17px Nunito,system-ui,sans-serif;border:0;border-radius:14px;padding:13px 18px;background:linear-gradient(#ffdc6a,#f2c94c 60%,#e0b030);color:#1a2e1f;cursor:pointer;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55)}
+.btn.alt{background:#24402f;color:var(--ink);box-shadow:none;border:1px solid var(--line)}
+.mine{display:flex;flex-direction:column;gap:6px}
+.mine a{color:var(--soft);text-decoration:none;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.err{color:#ffb4a8;font-weight:700}
+.game{position:relative;width:min(100vw,calc(100vh * 844 / 390));width:min(100vw,calc(100dvh * 844 / 390));aspect-ratio:844/390;container-type:inline-size;overflow:hidden;user-select:none;-webkit-user-select:none}
+.game>*{--u:calc(100cqw / 844)}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.pill{position:absolute;display:flex;align-items:center;background:var(--glass);-webkit-backdrop-filter:blur(calc(var(--u) * 6));backdrop-filter:blur(calc(var(--u) * 6));border:calc(var(--u) * 1.5) solid rgba(255,255,255,.14);box-shadow:0 calc(var(--u) * 4) calc(var(--u) * 14) rgba(0,0,0,.35);pointer-events:none}
+.pill.me{border-color:var(--gold);box-shadow:0 0 calc(var(--u) * 14) rgba(242,201,76,.45),0 calc(var(--u) * 4) calc(var(--u) * 14) rgba(0,0,0,.35)}
+.p1,.p2{top:calc(var(--u) * 10);width:calc(var(--u) * 190);height:calc(var(--u) * 44);border-radius:calc(var(--u) * 22);gap:calc(var(--u) * 10);padding-left:calc(var(--u) * 12)}
+.p1{left:calc(var(--u) * 18)}.p2{left:calc(var(--u) * 636)}
+.mid{left:calc(var(--u) * 322);top:calc(var(--u) * 8);width:calc(var(--u) * 200);height:calc(var(--u) * 48);border-radius:calc(var(--u) * 24);flex-direction:column;justify-content:center;text-align:center}
+.ball{flex:none;width:calc(var(--u) * 24);height:calc(var(--u) * 24);border-radius:50%;box-shadow:0 calc(var(--u) * 2) calc(var(--u) * 4) rgba(0,0,0,.5)}
+.ball.b{background:radial-gradient(circle at 35% 30%,#d3e7ff 0,#3a86ea 45%,#1a4fa0 100%)}
+.ball.r{background:radial-gradient(circle at 35% 30%,#ffd5cf 0,#e5483b 45%,#9c2218 100%)}
+.name{font-size:calc(var(--u) * 17);font-weight:800;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(var(--u) * 130)}
+.sub{font-size:calc(var(--u) * 12);font-weight:700;color:var(--soft);line-height:1.2;white-space:nowrap}
+.mid .name{font-size:calc(var(--u) * 15);max-width:none}
+.mid .sub{color:var(--gold);font-weight:800}
+.bar{position:absolute;left:calc(var(--u) * 18);top:calc(var(--u) * 350);height:calc(var(--u) * 36);width:calc(var(--u) * 600);display:flex;align-items:center;gap:calc(var(--u) * 12);font-size:calc(var(--u) * 14);font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.7);pointer-events:none}
+.meter{position:relative;width:calc(var(--u) * 300);height:calc(var(--u) * 20);border-radius:calc(var(--u) * 10);background:rgba(8,22,14,.8);border:calc(var(--u) * 1.5) solid rgba(255,255,255,.16);overflow:hidden}
+.meter i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#6fd36a,#f2c94c 60%,#ef7b45);box-shadow:inset 0 calc(var(--u) * 2) 0 rgba(255,255,255,.3)}
+.go{position:absolute;left:calc(var(--u) * 640);top:calc(var(--u) * 352);width:calc(var(--u) * 186);height:calc(var(--u) * 34);border:0;border-radius:calc(var(--u) * 17);background:linear-gradient(#ffdc6a,#f2c94c 60%,#e0b030);color:#1a2e1f;font:800 calc(var(--u) * 17) Nunito,system-ui,sans-serif;box-shadow:0 calc(var(--u) * 3) calc(var(--u) * 10) rgba(0,0,0,.45),inset 0 calc(var(--u) * 1.5) 0 rgba(255,255,255,.55);cursor:pointer}
+.tgb{position:absolute;left:calc(var(--u) * 528);top:calc(var(--u) * 356);width:calc(var(--u) * 102);height:calc(var(--u) * 26);border:1px solid var(--line);border-radius:calc(var(--u) * 13);background:#24402f;color:var(--ink);font:800 calc(var(--u) * 13) Nunito,system-ui,sans-serif;cursor:pointer}
+.go.off{filter:saturate(.3) brightness(.8)}
+.go:focus-visible{outline:calc(var(--u) * 3) solid #fff;outline-offset:calc(var(--u) * 2)}
+.banner{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--u) * 76);max-width:calc(var(--u) * 560);padding:calc(var(--u) * 10) calc(var(--u) * 18);border-radius:calc(var(--u) * 16);background:var(--glass);-webkit-backdrop-filter:blur(calc(var(--u) * 6));backdrop-filter:blur(calc(var(--u) * 6));border:calc(var(--u) * 1.5) solid var(--line);font-size:calc(var(--u) * 15);font-weight:700;text-align:center;pointer-events:none}
+.toast{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--u) * 150);padding:calc(var(--u) * 9) calc(var(--u) * 20);border-radius:calc(var(--u) * 20);background:rgba(201,55,44,.95);font-size:calc(var(--u) * 18);font-weight:800;pointer-events:none;opacity:0;transition:opacity .2s}
+.toast.on{opacity:1}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(6,16,10,.66)}
+.overlay .card{width:calc(var(--u) * 660);max-width:92%;padding:calc(var(--u) * 22);background:var(--card);border:1px solid var(--line);border-radius:calc(var(--u) * 18);display:flex;flex-direction:column;gap:calc(var(--u) * 12);font-size:calc(var(--u) * 16)}
+.overlay h2{margin:0;font-size:calc(var(--u) * 26);font-weight:800}
+.overlay input{font:700 calc(var(--u) * 15) Nunito,system-ui,sans-serif;padding:calc(var(--u) * 10) calc(var(--u) * 12);border-radius:calc(var(--u) * 10);border:1px solid var(--line);background:#0e1913;color:var(--ink);width:100%}
+.overlay .row{display:flex;gap:calc(var(--u) * 10)}
+.overlay .btn{font-size:calc(var(--u) * 16);padding:calc(var(--u) * 10) calc(var(--u) * 16);border-radius:calc(var(--u) * 12)}
+.overlay table{border-collapse:collapse;width:100%}
+.overlay th,.overlay td{font-size:calc(var(--u) * 14);padding:calc(var(--u) * 5) calc(var(--u) * 4);text-align:center;border-bottom:1px solid var(--line)}
+.overlay th:first-child,.overlay td:first-child{text-align:left}
+.rot{position:fixed;left:0;right:0;bottom:0;padding:8px;text-align:center;font-weight:700;font-size:14px;background:#24402f;color:var(--soft)}
+@media (orientation:landscape){.rot{display:none}}
+</style>
+</head>
+<body>
+<section class="screen" id="home" hidden>
+  <h1>Minigolf Duell</h1>
+  <p>Zwei Spieler, neun Bahnen, abwechselnd schlagen. Das Spiel bleibt gespeichert, ihr müsst nicht gleichzeitig online sein.</p>
+  <input id="nameHome" type="text" maxlength="20" placeholder="Dein Name" aria-label="Dein Name" autocomplete="nickname">
+  <button class="btn" id="create" type="button">Neues Spiel erstellen</button>
+  <div class="err" id="homeErr"></div>
+  <div class="mine" id="mine"></div>
+</section>
+<section class="screen" id="join" hidden>
+  <h1>Einladung zum Minigolf</h1>
+  <p id="joinInfo">Jemand hat dich zu einem Duell eingeladen.</p>
+  <input id="nameJoin" type="text" maxlength="20" placeholder="Dein Name" aria-label="Dein Name" autocomplete="nickname">
+  <button class="btn" id="joinBtn" type="button">Spiel beitreten</button>
+  <div class="err" id="joinErr"></div>
+</section>
+<div class="game" id="game" hidden>
+  <canvas id="c" role="img" aria-label="Minigolf-Bahn in Draufsicht"></canvas>
+  <div class="pill p1" id="p1"><span class="ball b"></span><div><div class="name" id="n1">Spieler 1</div><div class="sub" id="s1"></div></div></div>
+  <div class="pill mid"><div class="name" id="midT">Bahn 1</div><div class="sub" id="midS"></div></div>
+  <div class="pill p2" id="p2"><span class="ball r"></span><div><div class="name" id="n2">wartet</div><div class="sub" id="s2"></div></div></div>
+  <div class="banner" id="banner" hidden></div>
+  <div class="toast" id="toast"></div>
+  <div class="bar"><span>Kraft</span><span class="meter"><i id="pw"></i></span><span id="pwT">0 %</span><span id="angT" style="margin-left:calc(var(--u) * 14)">Winkel -</span></div>
+  <button class="go off" id="go" type="button">Schlag</button>
+  <button class="tgb" id="tgb" type="button" hidden>Telegram</button>
+  <div class="overlay" id="invite" hidden><div class="card">
+    <h2>Mitspieler einladen</h2>
+    <div>Schick diesen Link an deinen Mitspieler. Sobald er beitritt, geht es los.</div>
+    <input id="link" type="text" readonly aria-label="Einladungslink">
+    <div class="row"><button class="btn" id="copy" type="button">Link kopieren</button><button class="btn alt" id="share" type="button">Teilen</button></div>
+  </div></div>
+  <div class="overlay" id="end" hidden><div class="card">
+    <h2 id="endT">Spiel beendet</h2>
+    <table id="endTab"></table>
+    <div class="row"><button class="btn" id="again" type="button">Neues Spiel</button></div>
+  </div></div>
+</div>
+<div class="rot" id="rot">Handy quer halten für das beste Bild</div>
+<script src="shared.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
