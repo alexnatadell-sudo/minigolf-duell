@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Galgenmännchen</title>
+<style>
+:root{--bg:#fbf7ee;--ink:#1f2a24;--soft:#5a665e;--card:#ffffff;--line:#d9d2bf;--ok:#2e7d4f;--bad:#b3392f;--gold:#e0a82e;--btn:#2f6f4f;--btnink:#fff;color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink)}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:20px;display:flex;justify-content:center;-webkit-tap-highlight-color:transparent}
+main{width:100%;max-width:520px;padding:14px 14px 28px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px}
+.col{display:flex;flex-direction:column;gap:14px}
+h1{margin:0;font-size:30px}
+h2{margin:0;font-size:26px}
+p{margin:0;line-height:1.45}
+.soft{color:var(--soft)}
+.big{font-size:22px;font-weight:700}
+button{font:inherit;font-weight:700;border:0;border-radius:14px;background:var(--btn);color:var(--btnink);padding:16px 18px;min-height:56px;cursor:pointer}
+button:active{transform:scale(.97)}
+button.sec{background:#e9e2cf;color:var(--ink)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+input{font:inherit;font-weight:700;padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:#fff;color:var(--ink);width:100%;min-height:56px}
+#wordIn{text-transform:uppercase;letter-spacing:2px;font-size:24px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;flex-wrap:wrap}
+#status{text-align:center;font-size:24px;font-weight:800;padding:16px;border-radius:16px;background:#e9e2cf}
+#status.me{background:var(--gold);color:#1f2a24}
+.cat{text-align:center;font-size:22px}
+.cat b{background:var(--gold);color:#1f2a24;padding:4px 14px;border-radius:999px}
+svg{width:100%;max-width:300px;height:auto;display:block;margin:0 auto}
+svg .g{stroke:#5b4a32;stroke-width:6;stroke-linecap:round;fill:none}
+svg .m{stroke:var(--ink);stroke-width:5;stroke-linecap:round;fill:none}
+#word{display:flex;flex-wrap:nowrap;justify-content:center;gap:6px}
+#word span{flex:0 0 auto;height:54px;border-bottom:5px solid var(--ink);text-align:center;font-weight:800;line-height:54px}
+#word span.rev{color:var(--bad)}
+#word span.pend{color:#b9b2a0}
+.err{text-align:center;font-weight:700}
+#kb{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+#kb button{padding:0;min-height:52px;font-size:22px;background:#2f6f4f}
+#kb button.hit{background:#dff1e5;color:var(--ok);opacity:1;outline:2px solid var(--ok)}
+#kb button.miss{background:var(--bad);opacity:.55}
+.msg{text-align:center;font-size:24px;font-weight:800;padding:14px;border-radius:14px}
+.msg.win{background:#dff1e5;color:var(--ok)}
+.msg.lose{background:#f6dfdc;color:var(--bad)}
+.row{display:flex;gap:10px}
+.row button{flex:1}
+#themes{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+#themes button{background:#e9e2cf;color:var(--ink);min-height:52px;padding:10px}
+#themes button.on{background:var(--gold);outline:3px solid var(--ink)}
+.or{text-align:center;color:var(--soft);font-weight:700}
+.errt{color:var(--bad);font-weight:700}
+.mine{display:flex;flex-direction:column;gap:8px}
+.mine a{color:var(--ink);text-decoration:none;padding:14px 16px;border:2px solid var(--line);border-radius:14px;font-weight:700;display:flex;justify-content:space-between;gap:8px;background:#fff}
+table{border-collapse:collapse;width:100%}
+th,td{padding:8px 4px;text-align:center;border-bottom:2px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.tools button{flex:1 1 140px;font-size:17px;min-height:48px;padding:10px 12px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<main>
+
+<section id="home" class="card col" hidden>
+  <h1>Galgenmännchen</h1>
+  <p>Zu zweit über das Internet. Einer denkt sich ein Wort aus, der andere rät. Jede Runde wird getauscht.</p>
+  <p class="soft">6 Runden. 8 Fehler pro Runde. Einmal pro Runde gibt es einen Hinweis, der kostet einen Fehler. Kein Zeitdruck, ihr müsst nicht gleichzeitig spielen.</p>
+  <input id="nameHome" type="text" maxlength="20" placeholder="Dein Name" aria-label="Dein Name" autocomplete="nickname">
+  <button id="create" type="button">Neue Partie starten</button>
+  <div class="errt" id="homeErr"></div>
+  <div class="mine" id="mine"></div>
+</section>
+
+<section id="join" class="card col" hidden>
+  <h1>Galgenmännchen</h1>
+  <p class="big" id="joinInfo">Du bist zu einer Partie eingeladen.</p>
+  <p>Schreib deinen Namen und tippe auf „Mitspielen“.</p>
+  <input id="nameJoin" type="text" maxlength="20" placeholder="Dein Name" aria-label="Dein Name" autocomplete="nickname">
+  <button id="joinBtn" type="button">Mitspielen</button>
+  <div class="errt" id="joinErr"></div>
+</section>
+
+<section id="game" class="col" hidden>
+  <div class="card top"><span id="rnd">Runde 1 von 6</span><span id="score"></span></div>
+  <div id="status"></div>
+
+  <div id="invite" class="card col" hidden>
+    <h2>Mitspieler einladen</h2>
+    <p>Schick diesen Link per WhatsApp. Sobald die Einladung angenommen ist, kann geraten werden.</p>
+    <input id="link" type="text" readonly aria-label="Einladungslink">
+    <div class="row"><button id="share" type="button">Teilen</button><button id="copy" class="sec" type="button">Kopieren</button></div>
+  </div>
+
+  <div id="setword" class="card col" hidden>
+    <h2>Denk dir ein Wort aus</h2>
+    <p id="setInfo">Dein Mitspieler rät es.</p>
+    <input id="wordIn" type="text" maxlength="20" placeholder="Wort" aria-label="Geheimes Wort" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false">
+    <p class="soft" id="wordLen">Nur ein Wort, höchstens 16 Buchstaben.</p>
+    <p class="big">Thema antippen:</p>
+    <div id="themes"></div>
+    <div class="errt" id="wordErr"></div>
+    <button id="sendWord" type="button">Wort abschicken</button>
+    <div class="or">oder</div>
+    <button id="autoWord" class="sec" type="button">Computer sucht ein Wort aus</button>
+  </div>
+
+  <div id="result" class="card col" hidden>
+    <div class="msg" id="resMsg"></div>
+    <p class="big" id="resNext"></p>
+    <button id="resOk" type="button">Weiter</button>
+  </div>
+
+  <div id="play" class="col" hidden>
+    <div class="cat">Thema: <b id="cat"></b></div>
+    <div class="card"><svg viewBox="0 0 200 220" aria-label="Galgen"><g id="fig"></g></svg></div>
+    <div id="word"></div>
+    <div class="err" id="err"></div>
+    <div id="kb"></div>
+    <div class="row" id="hintRow"><button id="hint" class="sec" type="button">Hinweis (1x)</button></div>
+  </div>
+
+  <div id="end" class="card col" hidden>
+    <h2>Partie zu Ende</h2>
+    <p class="big" id="winner"></p>
+    <table id="endTab"></table>
+    <button id="rematch" type="button">Noch eine Partie</button>
+  </div>
+
+  <div class="tools">
+    <button id="tgBtn" class="sec" type="button" hidden>Telegram</button>
+    <button id="myLink" class="sec" type="button">Meinen Link kopieren</button>
+    <button id="homeBtn" class="sec" type="button">Startseite</button>
+  </div>
+</section>
+
+</main>
+<div class="toast" id="toast"></div>
+<script>
+(function () {
+'use strict';
+var LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'.split('');
+var $ = function (id) { return document.getElementById(id); };
+var A = { id: null, token: null, seat: -1, game: null, cat: '', busy: false, pollT: null, themesBuilt: false };
+var TGC = null;
+
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+var toastT;
+function toast(m) { var el = $('toast'); el.textContent = m; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove('on'); }, 1800); }
+
+function api(method, url, body) {
+  return fetch(url, { method: method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' })
+    .then(function (r) { return r.json().then(function (j) { if (!r.ok) { var e = new Error(j.error || 'Fehler'); e.status = r.status; e.data = j; throw e; } return j; }); });
+}
+function store() { try { return JSON.parse(localStorage.getItem('gg_games') || '{}'); } catch (e) { return {}; } }
+function saveStore(o) { try { localStorage.setItem('gg_games', JSON.stringify(o)); } catch (e) {} }
+function remember(id, token, seat) { var s = store(); var o = s[id] || {}; o.token = token; o.seat = seat; o.at = o.at || Date.now(); s[id] = o; saveStore(s); }
+function setAck(i) { var s = store(); if (s[A.id]) { s[A.id].ack = i; s[A.id].vs = otherName(); saveStore(s); } }
+function getAck() { var s = store()[A.id]; return s && typeof s.ack === 'number' ? s.ack : -1; }
+function myName() { try { return localStorage.getItem('mg_name') || ''; } catch (e) { return ''; } }
+function setMyName(n) { try { localStorage.setItem('mg_name', n); } catch (e) {} }
+
+function show(w) { ['home', 'join', 'game'].forEach(function (s) { $(s).hidden = s !== w; }); }
+function nameOf(i) { var p = A.game.players[i]; return p ? p.name : 'Mitspieler'; }
+function otherName() { return A.game && A.seat >= 0 ? nameOf(1 - A.seat) : ''; }
+function inviteUrl() { return location.origin + location.pathname + '#/game/' + A.id; }
+function myUrl() { return location.origin + location.pathname + '#/game/' + A.id + '/k/' + A.token; }
+
+/* ---------- Abfragen ---------- */
+function stopPoll() { clearTimeout(A.pollT); }
+function schedulePoll() {
+  stopPoll();
+  if (!A.game || A.game.status === 'finished' && A.game.rematch) return;
+  var mine = A.game.turn === A.seat;
+  A.pollT = setTimeout(poll, mine ? 8000 : 2500);
+}
+function poll() {
+  if (!A.id) return;
+  if (A.busy) { schedulePoll(); return; }
+  api('GET', '/api/galgen/' + A.id + (A.token ? '?token=' + A.token : '')).then(function (res) {
+    if (!A.busy && res.game.updatedAt !== A.game.updatedAt) apply(res);
+  }).catch(function () {}).then(schedulePoll);
+}
+document.addEventListener('visibilitychange', function () { if (!document.hidden && A.game) poll(); });
+
+/* ---------- Anzeige ---------- */
+function apply(res) {
+  A.game = res.game; A.seat = res.you;
+  if (res.themes && !A.themesBuilt) buildThemes(res.themes);
+  render();
+}
+function lastDone() { var r = A.game.rounds, i; for (i = r.length - 1; i >= 0; i--) if (r[i].done) return i; return -1; }
+
+function render() {
+  var g = A.game, me = A.seat, r = g.rounds[g.rounds.length - 1];
+  $('rnd').textContent = 'Runde ' + g.round + ' von ' + g.total;
+  if (g.players.length > 1) $('score').textContent = nameOf(0) + ' ' + g.scores[0].solved + ' : ' + g.scores[1].solved + ' ' + nameOf(1);
+  else $('score').textContent = '';
+  ['invite', 'setword', 'result', 'play', 'end'].forEach(function (id) { $(id).hidden = true; });
+  $('tgBtn').hidden = !(TGC && TGC.bot && me >= 0);
+  if (TGC && TGC.bot && me >= 0) $('tgBtn').textContent = g.tg[me] ? 'Telegram ist verbunden' : 'Telegram verbinden';
+
+  var st = $('status'); st.className = '';
+  if (me < 0) { st.textContent = 'Du schaust zu.'; showPlay(r, false); return; }
+
+  // Ergebnis der letzten Runde zuerst zeigen, bis "Weiter" getippt wurde
+  var ld = lastDone();
+  if (ld >= 0 && ld > getAck()) {
+    showResult(ld);
+    st.hidden = true;
+    return;
+  }
+  st.hidden = false;
+  if (g.status === 'finished') { st.textContent = 'Die Partie ist zu Ende.'; showEnd(); return; }
+
+  var other = otherName();
+  if (g.status === 'waiting' && me === 0) {
+    $('invite').hidden = false; $('link').value = inviteUrl();
+  }
+  if (!r.hasWord) {
+    if (r.setter === me) {
+      st.className = 'me'; st.textContent = 'Du bist dran!';
+      $('setword').hidden = false;
+      $('setInfo').textContent = (g.players.length > 1 ? other : 'Dein Mitspieler') + ' muss es raten. Du siehst dabei zu.';
+    } else {
+      st.textContent = other + ' denkt sich ein Wort aus. Bitte warten.';
+    }
+    return;
+  }
+  if (g.status === 'waiting') { st.textContent = 'Dein Wort ist gespeichert. Warte, bis die Einladung angenommen wird.'; return; }
+  if (r.setter === me) {
+    st.textContent = other + ' rät gerade dein Wort.';
+    showPlay(r, false);
+  } else {
+    st.className = 'me'; st.textContent = 'Du bist dran: Rate das Wort!';
+    showPlay(r, true);
+  }
+}
+
+function showPlay(r, guesser) {
+  $('play').hidden = false;
+  $('cat').textContent = r.cat || '-';
+  drawWord(r);
+  $('err').textContent = 'Fehler: ' + r.errs + ' von ' + A.game.maxErr;
+  drawFig(r.errs);
+  $('kb').hidden = !guesser; $('hintRow').hidden = !guesser;
+  if (guesser) {
+    var btns = $('kb').children, inWord = r.mask.join('');
+    for (var k = 0; k < btns.length; k++) {
+      var l = btns[k].getAttribute('data-l'), was = r.guessed.indexOf(l) >= 0;
+      btns[k].className = was ? (inWord.indexOf(l) >= 0 ? 'hit' : 'miss') : '';
+      btns[k].disabled = was || r.done;
+    }
+    $('hint').disabled = r.hint || r.done;
+    $('hint').textContent = r.hint ? 'Hinweis benutzt' : 'Hinweis (1x, kostet 1 Fehler)';
+  }
+}
+
+function drawWord(r) {
+  var w = $('word'); w.textContent = '';
+  var W = w.clientWidth || Math.min(window.innerWidth, 520) - 28;
+  var n = r.len, gap = n > 11 ? 3 : 6; w.style.gap = gap + 'px';
+  var cell = Math.max(14, Math.min(40, Math.floor((W - gap * (n - 1)) / n)));
+  for (var i = 0; i < n; i++) {
+    var s = document.createElement('span');
+    s.style.width = cell + 'px'; s.style.fontSize = Math.min(36, Math.floor(cell * 0.9)) + 'px';
+    if (r.mask[i]) s.textContent = r.mask[i];
+    else if (r.word) { s.textContent = r.word[i]; s.className = r.done ? 'rev' : 'pend'; }
+    w.appendChild(s);
+  }
+}
+
+function drawFig(errs) {
+  var parts = [
+    '<line class="g" x1="20" y1="205" x2="120" y2="205"/>',
+    '<line class="g" x1="50" y1="205" x2="50" y2="20"/>',
+    '<line class="g" x1="50" y1="20" x2="140" y2="20"/><line class="g" x1="50" y1="50" x2="80" y2="20"/>',
+    '<line class="g" x1="140" y1="20" x2="140" y2="45"/>',
+    '<circle class="m" cx="140" cy="62" r="17"/>',
+    '<line class="m" x1="140" y1="79" x2="140" y2="130"/>',
+    '<line class="m" x1="140" y1="92" x2="118" y2="115"/><line class="m" x1="140" y1="92" x2="162" y2="115"/>',
+    '<line class="m" x1="140" y1="130" x2="122" y2="168"/><line class="m" x1="140" y1="130" x2="158" y2="168"/>'
+  ];
+  var h = ''; for (var i = 0; i < errs && i < parts.length; i++) h += parts[i];
+  $('fig').innerHTML = h;
+}
+
+function showResult(i) {
+  var g = A.game, r = g.rounds[i], me = A.seat, gu = 1 - r.setter, msg;
+  if (gu === me) msg = r.win ? 'Geschafft! Das Wort war ' + r.word + '.' : 'Leider nicht. Das Wort war ' + r.word + '.';
+  else msg = r.win ? nameOf(gu) + ' hat dein Wort ' + r.word + ' erraten.' : nameOf(gu) + ' hat dein Wort ' + r.word + ' nicht erraten.';
+  $('resMsg').className = 'msg ' + ((gu === me) === !!r.win ? 'win' : 'lose');
+  $('resMsg').textContent = msg;
+  var nx = g.rounds[i + 1], txt;
+  if (g.status === 'finished' && i === g.rounds.length - 1) txt = 'Das war die letzte Runde.';
+  else if (nx && nx.setter === me) txt = 'Jetzt denkst du dir ein Wort aus.';
+  else txt = 'Jetzt bist du mit Raten dran.';
+  $('resNext').textContent = txt;
+  $('resOk').textContent = g.status === 'finished' && i === g.rounds.length - 1 ? 'Ergebnis ansehen' : 'Weiter';
+  $('result').hidden = false;
+  showPlay(r, false);
+  $('result').dataset.i = i;
+}
+
+function showEnd() {
+  var g = A.game, s = g.scores, me = A.seat;
+  $('end').hidden = false;
+  var w;
+  if (s[0].solved !== s[1].solved) w = s[0].solved > s[1].solved ? 0 : 1;
+  else if (s[0].errs !== s[1].errs) w = s[0].errs < s[1].errs ? 0 : 1;
+  else w = -1;
+  $('winner').textContent = w < 0 ? 'Unentschieden!' : (w === me ? 'Du hast gewonnen!' : nameOf(w) + ' hat gewonnen!');
+  var h = '<tr><th></th><th>Gelöst</th><th>Fehler</th></tr>';
+  for (var i = 0; i < 2; i++) h += '<tr><td>' + esc(nameOf(i)) + '</td><td>' + s[i].solved + ' von ' + s[i].played + '</td><td>' + s[i].errs + '</td></tr>';
+  $('endTab').innerHTML = h;
+  $('rematch').textContent = g.rematch ? 'Zur neuen Partie' : 'Noch eine Partie';
+}
+
+/* ---------- Eingaben ---------- */
+function buildKb() {
+  var kb = $('kb');
+  LETTERS.forEach(function (l) {
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = l; b.setAttribute('data-l', l);
+    b.addEventListener('click', function () { guess(l); });
+    kb.appendChild(b);
+  });
+}
+function buildThemes(list) {
+  var box = $('themes'); box.textContent = '';
+  list.forEach(function (t) {
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = t;
+    b.addEventListener('click', function () { A.cat = t; Array.prototype.forEach.call(box.children, function (x) { x.className = x === b ? 'on' : ''; }); $('wordErr').textContent = ''; });
+    box.appendChild(b);
+  });
+  A.themesBuilt = true;
+}
+function post(action, body) {
+  if (A.busy) return Promise.resolve();
+  A.busy = true;
+  body.token = A.token;
+  return api('POST', '/api/galgen/' + A.id + '/' + action, body)
+    .then(function (res) { A.busy = false; apply(res); schedulePoll(); return res; })
+    .catch(function (e) { A.busy = false; if (e.data && e.data.game) apply(e.data); throw e; });
+}
+function guess(l) {
+  var r = A.game && A.game.rounds[A.game.rounds.length - 1];
+  if (!r || A.game.turn !== A.seat || !r.hasWord || r.guessed.indexOf(l) >= 0) return;
+  post('guess', { letter: l }).catch(function (e) { toast(e.message); });
+}
+$('hint').addEventListener('click', function () { post('hint', {}).catch(function (e) { toast(e.message); }); });
+
+function normWord(w) { return String(w || '').trim().replace(/ß/g, 'SS').toUpperCase(); }
+$('wordIn').addEventListener('input', function () {
+  var w = normWord(this.value);
+  $('wordLen').textContent = w ? w.length + ' Buchstaben' + (w.length > 16 ? ', zu lang (höchstens 16)' : '') : 'Nur ein Wort, höchstens 16 Buchstaben.';
+  $('wordErr').textContent = '';
+});
+$('sendWord').addEventListener('click', function () {
+  var w = normWord($('wordIn').value);
+  if (!w) { $('wordErr').textContent = 'Bitte zuerst ein Wort eingeben.'; return; }
+  if (!A.cat) { $('wordErr').textContent = 'Bitte noch ein Thema antippen.'; return; }
+  post('word', { word: w, cat: A.cat }).then(clearWord).catch(function (e) { $('wordErr').textContent = e.message; });
+});
+$('autoWord').addEventListener('click', function () {
+  post('word', { auto: true }).then(clearWord).catch(function (e) { $('wordErr').textContent = e.message; });
+});
+function clearWord() { $('wordIn').value = ''; A.cat = ''; Array.prototype.forEach.call($('themes').children, function (x) { x.className = ''; }); $('wordLen').textContent = 'Nur ein Wort, höchstens 16 Buchstaben.'; window.scrollTo(0, 0); }
+
+$('resOk').addEventListener('click', function () { setAck(parseInt($('result').dataset.i, 10)); render(); window.scrollTo(0, 0); });
+
+document.addEventListener('keydown', function (e) {
+  if (e.ctrlKey || e.metaKey || e.altKey || $('game').hidden || $('play').hidden || $('kb').hidden) return;
+  if (e.target && e.target.tagName === 'INPUT') return;
+  var k = e.key.toUpperCase();
+  if (LETTERS.indexOf(k) >= 0) guess(k);
+});
+
+function copyText(t, msg) {
+  try { navigator.clipboard.writeText(t).then(function () { toast(msg); }, function () { prompt('Link:', t); }); } catch (e) { prompt('Link:', t); }
+}
+$('copy').addEventListener('click', function () { copyText(inviteUrl(), 'Link kopiert'); });
+$('share').addEventListener('click', function () {
+  var url = inviteUrl(), text = 'Spielst du mit mir Galgenmännchen? Einfach hier antippen:';
+  if (navigator.share) navigator.share({ title: 'Galgenmännchen', text: text, url: url }).catch(function () {});
+  else window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank');
+});
+$('myLink').addEventListener('click', function () { if (A.token) copyText(myUrl(), 'Dein Link ist kopiert. Nicht weitergeben.'); });
+$('homeBtn').addEventListener('click', function () { location.hash = ''; });
+$('tgBtn').addEventListener('click', function () { if (TGC && TGC.bot) window.open('https://t.me/' + TGC.bot + '?start=' + A.token, '_blank'); });
+$('rematch').addEventListener('click', function () {
+  post('rematch', {}).then(function (r) { if (r && r.id) { remember(r.id, r.token, r.seat); location.hash = '#/game/' + r.id; } }).catch(function (e) { toast(e.message); });
+});
+
+/* ---------- Seiten ---------- */
+function showHome() {
+  stopPoll(); A.id = null; A.game = null; show('home');
+  $('nameHome').value = myName(); $('homeErr').textContent = '';
+  var s = store(), ids = Object.keys(s).sort(function (a, b) { return s[b].at - s[a].at; }).slice(0, 8), h = '';
+  if (ids.length) h += '<p class="big">Deine Partien</p>';
+  ids.forEach(function (id) {
+    var d = new Date(s[id].at), lab = (s[id].vs ? 'gegen ' + s[id].vs : 'Partie') + ', ' + d.getDate() + '.' + (d.getMonth() + 1) + '.';
+    h += '<a href="#/game/' + id + '"><span>' + esc(lab) + '</span><span>öffnen</span></a>';
+  });
+  $('mine').innerHTML = h;
+}
+function openGame(id) {
+  stopPoll();
+  A.id = id; var st = store()[id]; A.token = st ? st.token : null; A.game = null; A.busy = false;
+  api('GET', '/api/galgen/' + id + (A.token ? '?token=' + A.token : '')).then(function (res) {
+    if (res.you < 0 && res.game.status === 'waiting') {
+      show('join'); $('nameJoin').value = myName(); $('joinErr').textContent = '';
+      $('joinInfo').textContent = res.game.players[0].name + ' lädt dich zu Galgenmännchen ein.';
+      return;
+    }
+    show('game'); apply(res);
+    if (A.seat >= 0) setAck(getAck());
+    schedulePoll();
+  }).catch(function (e) {
+    show('home'); showHome(); $('homeErr').textContent = e.status === 404 ? 'Diese Partie gibt es nicht (mehr).' : 'Keine Verbindung zum Server.';
+  });
+}
+function route() {
+  var m = /^#\/game\/([0-9a-f-]{36})(?:\/k\/([0-9a-f]{32}))?/i.exec(location.hash);
+  if (!m) { showHome(); return; }
+  if (m[2]) { remember(m[1], m[2], -1); history.replaceState(null, '', location.pathname + '#/game/' + m[1]); }
+  openGame(m[1]);
+}
+$('create').addEventListener('click', function () {
+  var n = $('nameHome').value.trim();
+  if (!n) { $('homeErr').textContent = 'Bitte deinen Namen eingeben.'; return; }
+  setMyName(n);
+  api('POST', '/api/galgen', { name: n }).then(function (r) { remember(r.id, r.token, r.seat); location.hash = '#/game/' + r.id; })
+    .catch(function () { $('homeErr').textContent = 'Keine Verbindung zum Server.'; });
+});
+$('joinBtn').addEventListener('click', function () {
+  var n = $('nameJoin').value.trim();
+  if (!n) { $('joinErr').textContent = 'Bitte deinen Namen eingeben.'; return; }
+  setMyName(n);
+  api('POST', '/api/galgen/' + A.id + '/join', { name: n }).then(function (r) { remember(r.id, r.token, r.seat); openGame(r.id); })
+    .catch(function (e) { $('joinErr').textContent = e.message || 'Fehler'; });
+});
+window.addEventListener('hashchange', route);
+window.addEventListener('resize', function () { if (A.game && !$('play').hidden) { var r = A.game.rounds[A.game.rounds.length - 1]; var i = $('result').hidden ? -1 : parseInt($('result').dataset.i, 10); drawWord(i >= 0 ? A.game.rounds[i] : r); } });
+api('GET', '/api/config').then(function (c) { TGC = c; if (A.game) render(); }).catch(function () {});
+buildKb();
+route();
+})();
+</script>
+</body>
+</html>

@@ -76,3 +76,17 @@ Bahn-Vorschau im Browser: `http://localhost:3020/?preview=5`
 3. Im Spiel erscheint unten der Knopf **Telegram**. Antippen, in Telegram auf **Start** drücken. Danach kommt eine Nachricht, sobald man dran ist.
 
 Hinweis: Dafür einen **neuen** Bot nehmen, nicht den von Drawly.
+
+## Galgenmännchen (zweites Spiel, gleiche Kachel)
+
+Läuft im selben Server unter `/galgen/`, z. B. `https://DEINE-DOMAIN/galgen/`. Keine neue Kachel, kein neues Volume nötig.
+
+- Name eingeben, "Neue Partie starten", Link per WhatsApp teilen.
+- 6 Runden, Rollen wechseln jede Runde: einer gibt ein Wort und ein Thema vor (oder lässt den Computer wählen), der andere rät.
+- 8 Fehler pro Runde, 1 Hinweis pro Runde (kostet 1 Fehler). Wer mehr Wörter löst, gewinnt, bei Gleichstand weniger Fehler.
+- Wörter: nur Buchstaben, 2 bis 16, ß wird SS.
+- Der Wortgeber sieht live zu. Der Rater bekommt das Wort vom Server erst nach der Runde.
+- Gespeichert in `galgen.json` neben `games.json` (auf Railway im Volume `/data`).
+- Telegram: derselbe Bot, Knopf "Telegram verbinden" im Spiel. Nachricht, wenn ein Wort bereit ist oder eine Runde endet.
+
+Dateien: `galgen.js` (Regeln, Speicherung), `public/galgen/index.html` (Oberfläche).
