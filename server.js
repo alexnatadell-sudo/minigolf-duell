@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const MG = require('./public/shared.js');
 const GALGEN = require('./galgen.js');
+const WOERTER = require('./woerter.js');
 
 const PORT = parseInt(process.env.PORT || '3020', 10);
 const DATA_FILE = process.env.DATA_FILE || (process.env.RAILWAY_VOLUME_MOUNT_PATH ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'games.json') : path.join(__dirname, 'data', 'games.json'));
@@ -46,6 +47,7 @@ function notify(g, seat, text, gid, prefix) {
   tg('sendMessage', { chat_id: p.chat, text: text + (baseUrl ? '\n' + baseUrl + (prefix || '/') + '#/game/' + (gid || g.id) : '') }).catch(e => console.error('telegram', e.message));
 }
 GALGEN.init(path.join(path.dirname(DATA_FILE), 'galgen.json'), (g, seat, text) => notify(g, seat, text, null, '/galgen/'));
+WOERTER.init(path.join(path.dirname(DATA_FILE), 'woerter.json'), (g, seat, text) => notify(g, seat, text, null, '/woerter/'));
 async function tgLoop() {
   let offset = 0;
   try { const me = await tg('getMe'); if (me.ok && !TG_USER) TG_USER = me.result.username; await tg('deleteWebhook'); } catch (e) { console.error('telegram init', e.message); }
@@ -60,6 +62,7 @@ async function tgLoop() {
         const mt = /^\/start\s+([a-f0-9]{32})$/.exec(m.text.trim());
         if (!mt) { tg('sendMessage', { chat_id: m.chat.id, text: 'Hallo! Über den Telegram-Knopf im Spiel verbindest du dich mit deinem Spiel.' }).catch(() => {}); continue; }
         if (GALGEN.linkChat(mt[1], m.chat.id)) { tg('sendMessage', { chat_id: m.chat.id, text: 'Verbunden! Ich melde mich, sobald du beim Galgenmännchen dran bist.' }).catch(() => {}); continue; }
+        if (WOERTER.linkChat(mt[1], m.chat.id)) { tg('sendMessage', { chat_id: m.chat.id, text: 'Verbunden! Ich melde mich, sobald du beim Wörter-Duell dran bist.' }).catch(() => {}); continue; }
         for (const g of Object.values(games)) {
           const seat = seatOf(g, mt[1]);
           if (seat < 0) continue;
@@ -166,6 +169,7 @@ async function handleApi(req, res, url) {
   if (parts[1] === 'config') return sendJson(res, 200, { telegram: !!TG_TOKEN, bot: TG_USER });
   if (!process.env.PUBLIC_URL && !process.env.RAILWAY_PUBLIC_DOMAIN && req.headers.host) baseUrl = (req.headers['x-forwarded-proto'] || 'http') + '://' + (req.headers['x-forwarded-host'] || req.headers.host);
   if (parts[1] === 'galgen') return GALGEN.handle(req, res, url, parts, { sendJson, readBody });
+  if (parts[1] === 'woerter') return WOERTER.handle(req, res, url, parts, { sendJson, readBody });
   if (parts[1] !== 'games') return sendJson(res, 404, { error: 'not found' });
   if (parts.length === 2 && req.method === 'POST') {
     const body = await readBody(req);
@@ -226,6 +230,7 @@ async function handleApi(req, res, url) {
 function serveStatic(req, res, url) {
   let p = decodeURIComponent(url.pathname);
   if (p === '/galgen') { res.writeHead(301, { Location: '/galgen/' }); return res.end(); }
+  if (p === '/woerter') { res.writeHead(301, { Location: '/woerter/' }); return res.end(); }
   if (p.endsWith('/')) p += 'index.html';
   const file = path.normalize(path.join(PUBLIC, p));
   if (!file.startsWith(PUBLIC + path.sep)) { res.writeHead(403); return res.end('Forbidden'); }
@@ -249,4 +254,4 @@ const server = http.createServer(async (req, res) => {
 });
 server.listen(PORT, '0.0.0.0', () => console.log('Minigolf Duell läuft auf Port ' + PORT));
 if (TG_TOKEN) tgLoop();
-process.on('SIGTERM', () => { GALGEN.flush(); try { fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true }); fs.writeFileSync(DATA_FILE, JSON.stringify(games)); } catch (e) {} process.exit(0); });
+process.on('SIGTERM', () => { GALGEN.flush(); WOERTER.flush(); try { fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true }); fs.writeFileSync(DATA_FILE, JSON.stringify(games)); } catch (e) {} process.exit(0); });
