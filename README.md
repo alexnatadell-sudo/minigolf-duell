@@ -90,3 +90,17 @@ Läuft im selben Server unter `/galgen/`, z. B. `https://DEINE-DOMAIN/galgen/`. 
 - Telegram: derselbe Bot, Knopf "Telegram verbinden" im Spiel. Nachricht, wenn ein Wort bereit ist oder eine Runde endet.
 
 Dateien: `galgen.js` (Regeln, Speicherung), `public/galgen/index.html` (Oberfläche).
+
+## Wörter-Duell (drittes Spiel, gleiche Kachel)
+
+Wortlegespiel wie beim Kreuzworträtsel, unter `/woerter/`, z. B. `https://DEINE-DOMAIN/woerter/`. Keine neue Kachel, kein neues Volume.
+
+- Beim Start wählbar: **mit jemandem** (Link per WhatsApp) oder **gegen den Computer** (leicht, mittel, schwer).
+- Brett **11×11** (große Felder, fürs Handy) oder **15×15** (PC, Tablet).
+- **Wörter prüfen** an oder aus. Die Wortliste kennt rund 590.000 deutsche Wörter samt Beugungen (CC0, Quelle in `woerter/QUELLE.md`).
+- **Tipp-Knopf** an oder aus: 3 Tipps pro Person, der Computer legt einen Vorschlag hin.
+- 7 Steine pro Person, Joker ist jeder Buchstabe (0 Punkte), alle 7 auf einmal gibt 50 Extrapunkte. Tauschen geht, solange 7 Steine im Beutel sind. Ende: einer legt seinen letzten Stein bei leerem Beutel, oder 4 Züge hintereinander ohne Legen.
+- Bedienung: Stein antippen, dann Feld antippen (oder ziehen). Am PC: Feld anklicken, Buchstaben tippen, Enter legt, Esc holt zurück.
+- Gespeichert in `woerter.json` neben `games.json` (auf Railway im Volume `/data`). Telegram: derselbe Bot.
+
+Dateien: `woerter.js` (Regeln, Speicherung, Computergegner), `public/woerter/regeln.js` (Brett und Wertung, auch im Browser), `public/woerter/index.html` (Oberfläche), `woerter/wortliste.txt.gz` (Wortliste).
